@@ -6,7 +6,7 @@ cpRemote works well but could work better: if you configure 7-days backup, it du
 It has been tested on cpRemote 8.3 with 7 days Backup Retention. It will take a week to reclaim your disk space.
 
 **How does it work?**
-: It simply creates hard links (`cp -al`) of previous day's home directory instead of having to rsync everything back from the origin server. It has been inspired by [rdiff-backup](http://www.nongnu.org/rdiff-backup/).
+: It simply creates hard links (`cp -al`) of previous day's home directory instead of having to rsync everything back from the origin server. It has been inspired by [rsnapshot](http://rsnapshot.org/).
 
 Installation
 ------------
