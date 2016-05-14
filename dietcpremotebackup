@@ -1,0 +1,70 @@
+#!/usr/local/cpanel/3rdparty/bin/php -q
+<?php
+
+	/*
+		MIT License
+
+		Copyright (c) 2016 Julien Tessier, Cahri SARL
+
+		Permission is hereby granted, free of charge, to any person obtaining a copy
+		of this software and associated documentation files (the "Software"), to deal
+		in the Software without restriction, including without limitation the rights
+		to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+		copies of the Software, and to permit persons to whom the Software is
+		furnished to do so, subject to the following conditions:
+
+		The above copyright notice and this permission notice shall be included in all
+		copies or substantial portions of the Software.
+
+		THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+		IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+		FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+		AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+		LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+		OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+		SOFTWARE.
+	*/
+
+	set_time_limit(0);
+
+	require_once '/usr/local/cpanel/scripts/cpremote/lib.php';
+	$settings = get_settings();
+
+	if ($settings['ENABLEBKP'] == 0 || $settings['BKUPLOCAT'] == 'local') {
+		echo "Remote backup is disabled, skipping\n";
+	} elseif (empty($settings['7DAYSBKUP'])) {
+		echo "7-days backup is disabled, skipping\n";
+	} else {
+		$today = date('l', time());
+		$sevendays = explode(' ', $settings['7DAYSBKUP']);
+		$yesterday = FALSE;
+		if (($key = array_search($today, $sevendays)) !== FALSE) {
+			if ($key == 0) $yesterday = $sevendays[count($sevendays)-1];
+			else $yesterday = $sevendays[$key-1];
+		}
+		if ($yesterday === FALSE) {
+			echo "Didn't found yesterday, skipping\n";
+		} else {
+			$homedirs = finduserdata();
+			$is_weekly_day = $settings['WEEKLBKUP'] == 1 && $today == 'Sunday';
+			$is_monthly_day = $settings['MONTHBKUP'] == 1 && date('j') == 1;
+			foreach($homedirs as $homedir) {
+				$target = $settings['SSHUSRHOM'].'/%s/'.basename($homedir).'/homedir';
+				prepare_destination(sprintf($target, $today), sprintf($target, $yesterday));
+				if ($is_weekly_day) {
+					prepare_destination(sprintf($target, 'weekly'), sprintf($target, $yesterday));
+				}
+				if ($is_monthly_day) {
+					prepare_destination(sprintf($target, 'monthly'), sprintf($target, $yesterday));
+				}
+			}
+		}
+	}
+
+	function prepare_destination($destination, $source) {
+		global $settings;
+		echo "Preparing $destination with $source\n";
+		$sshcmd = '/usr/bin/ssh -F /etc/cpremote/ssh_config  -p ' . $settings['SSHSERPRT'] . '  ' . $settings['SSHBKPUSR'] . '@' . $settings['SSHSERVIP']. ' ';
+		system($sshcmd . '/bin/mkdir -p ' . $destination);
+		system($sshcmd . '/bin/cp -al ' . $source . '/*' . ' ' . $destination . '/');
+	}
