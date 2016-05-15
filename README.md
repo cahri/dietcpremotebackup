@@ -17,7 +17,7 @@ Just run the following commands as root:
 2. `cd /usr/local/cpanel/scripts/`
 3. `wget https://raw.github.com/cahri/dietcpremotebackup/master/dietcpremotebackup`
 4. `chmod 755 dietcpremotebackup`
-5. edit crontab (`crontab -e`) and add `/usr/local/cpanel/scripts/dietpcpremotebackup && ` before `/usr/local/cpanel/scripts/cpremotebackup`
+5. edit crontab (`crontab -e`) and add `/usr/local/cpanel/scripts/dietcpremotebackup && ` before `/usr/local/cpanel/scripts/cpremotebackup`
 
 Version history
 ---------------
